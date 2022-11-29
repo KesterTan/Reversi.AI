@@ -1,5 +1,4 @@
 from cmu_112_graphics import *
-import random
 from main import *
 from randomAI import *
 from minimax import *
@@ -43,6 +42,14 @@ def appStarted(app):
     app.drawSliderCircle = (-99, -99)
     app.drawSliderCircleBool = False
     app.sliderX = 0
+    
+    #home icon
+    app.imagehome = app.loadImage('home.png')
+    app.homeImg = app.scaleImage(app.imagehome, 1.5)
+    
+    #confirm message if the user really wants to return to home
+    app.confirmReturn = False
+    app.confirmedReturn = False
     
 def gameDimensions(app):
     rows = 8
@@ -162,6 +169,10 @@ def drawHomePage(app, canvas):
                        fill='grey8')
     
 def drawGameplay(app, canvas):
+    #draw confirm message if home button pressed
+    if app.confirmReturn == True:
+        drawConfirmMessage(app, canvas)
+    
     #background
     canvas.create_rectangle(0,0, app.width, app.height, fill='tan')
     #Title
@@ -178,6 +189,44 @@ def drawGameplay(app, canvas):
     
     if app.gameOver == True:
         drawGameOver(app, canvas)
+        
+    #draw home button
+    canvas.create_image(app.width - app.cellSize, 
+                        app.cellSize//1.5, 
+                        image=ImageTk.PhotoImage(app.homeImg))
+        
+def drawConfirmMessage(app, canvas):
+    print('entered')
+    canvas.create_rectangle(app.margin + app.cellSize*1.5, 
+                        app.margin + app.cellSize*1.5,
+                        app.margin + app.cellSize*6.5,
+                        app.margin + app.cellSize*6.5,
+                        fill="tan",
+                        width=0)
+    
+    canvas.create_text(app.margin + app.cellSize*4,
+                    app.margin + app.cellSize*2,
+                    text=f"Are you sure you would like to return?",
+                    font='Helvetica 30 italic bold',
+                    fill='gray8')
+    
+    canvas.create_text(app.margin + app.cellSize*4,
+                    app.margin + app.cellSize*3,
+                    text=f"All of your progress will be lost",
+                    font='Helvetica 20 italic bold',
+                    fill='gray8')
+    
+    canvas.create_rectangle(app.margin + app.cellSize*3,
+                        app.margin + app.cellSize*5,
+                        app.margin + app.cellSize*5,
+                        app.margin + app.cellSize*5.5,
+                        fill='mint cream')
+    
+    canvas.create_text(app.margin + app.cellSize*4,
+                            app.margin+ app.cellSize*5.25,
+                            text="Return Home",
+                            fill='gray8',
+                            font='Helvetica 18 italic bold')
     
 def drawGameOver(app, canvas):
     canvas.create_rectangle(app.margin + app.cellSize*1.5, 
@@ -396,8 +445,42 @@ def mousePressed(app, event):
                 app.AI = True
                 app.gamePlay = True
                 app.selectDifficulty = False
-        
+    
+    
     if app.gameOver == False and app.home == False:
+        
+        #user clicks the home button
+        if (x >= app.width - app.cellSize - 1.5*15 and 
+            x <= app.width - app.cellSize + 1.5*15 and
+            y >= app.cellSize//1.5 - 1.5*15 and
+            y <= app.cellSize//1.5 + 1.5*15):
+                # app.confirmReturn = True
+                app.board = app.emptyBoard
+                app.gamePlay = False
+                app.home = True
+                # app.confirmedReturn = False
+                # app.confirmReturn = False
+            
+        # if app.confirmReturn == True:
+        #     #user clicks on confirm return
+        #     if (x >= app.margin + app.cellSize*3 and 
+        #         y >= app.margin + app.cellSize*5 and
+        #         x <= app.margin + app.cellSize*5 and
+        #         y <= app.margin + app.cellSize*5.5):
+        #             app.confirmedReturn = True
+        #     else:
+        #         app.confirmReturn = False
+                    
+        # if app.confirmedReturn == True:
+        #     app.board = app.emptyBoard
+        #     app.gamePlay = False
+        #     app.confirmedReturn = False
+        #     app.confirmReturn = False
+        #     app.gamePlay = False
+        #     app.home = True
+        # else:
+        #     app.confirmReturn = False
+            
         # get the x and y value of the mouse press
         row_num = (x - app.margin) // app.cellSize
         col_num = (y - app.margin) // app.cellSize
@@ -419,6 +502,7 @@ def mousePressed(app, event):
             total = app.player1.pieces + app.player2.pieces
             if total >= app.rows * app.cols:
                 app.gameOver = True
+                app.turn = app.player1
 
             # get all of opponent's moves
             turn = app.turn.number

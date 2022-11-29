@@ -1,4 +1,5 @@
 from gui import *
+import random
 
 # RANDOM AI
 def randomAI(app, playerNumber):
