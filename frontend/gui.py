@@ -120,24 +120,23 @@ class player(object):
      
     def play(self, x, y, board):
         self.getAllPossibleMoves(board)
-        print(board)
         self.getPiecesPosition(board)
         self.board[x][y] = self.number
         # Flip over all the pieces from the line
         
         movesAndLines = self.moves
         line = []
-        print(f'movesandlines: {movesAndLines}')
+        # print(f'movesandlines: {movesAndLines}')
         for moveAndLine in movesAndLines:
             # print(f'moveAndLine: {moveAndLine}')
             for key in moveAndLine:
-                print(f'key: {key}')
+                # print(f'key: {key}')
                 if key == (x, y):
-                    print(f'move: {moveAndLine[key]}')
+                    # print(f'move: {moveAndLine[key]}')
                     line += moveAndLine[key]
         
         for (a, b) in line:
-            print(f'flipping {a}, {b}')
+            # print(f'flipping {a}, {b}')
             self.board[a][b] = self.number
         
         # return the new board
@@ -178,6 +177,10 @@ def appStarted(app):
     app.homePageButton2 = (1,2,3,4)
     app.selectDifficulty = False
     app.AI = False
+    app.drawSlider = False
+    app.drawSliderCircle = (-99, -99)
+    app.drawSliderCircleBool = False
+    app.sliderX = 0
     
 def gameDimensions(app):
     rows = 8
@@ -251,6 +254,13 @@ def drawSelectDifficulty(app, canvas):
                        text="Play",
                        fill='grey8',
                        font='Helvetica 30')
+    #draw the slider
+    canvas.create_rectangle(app.margin + 0.5*app.cellSize,
+                            app.margin + 6*app.cellSize,
+                            app.margin + 8*app.cellSize,
+                            app.margin + 6.5*app.cellSize,
+                            width = 5)
+    drawSlider(app, canvas)
     
 def drawHomePage(app, canvas):
     #background
@@ -290,7 +300,7 @@ def drawHomePage(app, canvas):
                        text="Offline",
                        font='Helvetica 30',
                        fill='grey8')
-
+    
 def drawGameplay(app, canvas):
     #background
     canvas.create_rectangle(0,0, app.width, app.height, fill='tan')
@@ -348,8 +358,6 @@ def drawGameOver(app, canvas):
                             text="Play Again?",
                             fill='gray8',
                             font='Helvetica 18 italic bold')
-    
-# def mouseMoved(app, event):
     
 def drawScore(app, canvas):
     #circle
@@ -468,6 +476,42 @@ def drawCircle(app, canvas, row_num, col_num, color):
                         fill=color,
                         width=0)
     
+#create slider for AI difficulty
+def drawSlider(app, canvas):
+    x, y = app.drawSliderCircle
+    canvas.create_oval(x - app.cellSize//2,
+                       y - app.cellSize//2,
+                       x + app.cellSize//2,
+                       y + app.cellSize//2,
+                       fill="black",
+                       width=0)
+    
+    if app.drawSliderCircleBool == False:
+        canvas.create_oval(app.margin,
+                           app.margin + 6.25*app.cellSize - app.cellSize//2,
+                           app.margin + 0.5*app.cellSize + app.cellSize//2,
+                           app.margin + 6.25*app.cellSize + app.cellSize//2,
+                           fill="black",
+                           width=0)
+    
+def mouseDragged(app, event):
+    if app.gamePlay == False or app.home == False or app.selectDifficulty == True:
+        app.drawSlider = True
+    x, y = event.x, event.y
+    
+    #check if the mouse is within the box
+    check = False
+    if (x >= app.margin + 0.5*app.cellSize and x <= app.margin + 8*app.cellSize and
+    y >= app.margin + 6*app.cellSize and y <= app.margin + 6.5*app.cellSize):
+        app.drawSliderCircleBool = True
+        check = True
+        
+    #determine the depth of minimax AI
+    if app.drawSlider == True and check == True:
+        app.drawSliderCircle = (x, app.margin + 6.25*app.cellSize)
+        app.sliderX = int(((x - (app.margin + 0.5*app.cellSize))
+                           // app.cellSize) + 2)
+    
 def mousePressed(app, event):
     x, y = event.x, event.y
     if app.home == True:
@@ -502,7 +546,7 @@ def mousePressed(app, event):
         if isValid(app, x, y):
             # if legal: change the board pieces to your colour
             app.board = app.turn.play(col_num, row_num, app.board)
-            print(f'playing move {col_num}, {row_num}')
+            # print(f'playing move {col_num}, {row_num}')
             
             # updates score for both
             app.player1.pieces = app.player1.getNumberOfPieces(app.board)
@@ -593,14 +637,14 @@ def randomAI(app, playerNumber):
 def computeMinimax(board):
     # created weighted heuristic board
     weightedBoard = [
-        [30,   0, 10, 10, 10, 10,   0, 30],
-        [0,  -15,-10, -5, -5, -5, -10,  0],
+        [30,  -20, 10, 10, 10, 10,   -20, 30],
+        [-20, -15,-10, -5, -5, -5, -10, -20],
         [10, -10, -5,  0,  0,  0,  -5, 10],
         [10,  -5,  0,  3,  3,  0,  -5, 10],
         [10,  -5,  0,  3,  3,  0,  -5, 10],
         [10,  -5, -5,  0,  0,  0, -10, 10],
-        [0,  -10, -5, -5, -5,-10, -15,  0],
-        [30,   0, 10, 10, 10, 10,   0, 30],
+        [-20,  -10, -5, -5, -5,-10, -15, -20],
+        [80,   -20, 10, 10, 10, 10,  -20, 80],
     ]
     player1score = 0
     player2score = 0
@@ -615,20 +659,19 @@ def computeMinimax(board):
 def minimax_max(app, board, player, depth, counter):
     # print("starting max")
     # get all possible moves for the particular playernumber (can look to optimize this)
-    movesAndLines = player.getAllPossibleMoves(board)
-    moves = set()
-    for moveAndLine in movesAndLines:
-        for key in moveAndLine:
-            moves.add(key)
-    moves = list(moves)
+    moves = player.getAllPossiblePositions(board)
+    # print(moves)
     # base case
-    if counter >= depth:
+    if counter >= depth or moves == set():
         # compute scores for both black and white
         # return the final score (either black - white or white - black)
         scores = computeMinimax(board)
+        # print(scores)
         if player.number == 1:
+            # print(scores[0] - scores[1])
             return scores[0] - scores[1]
         else:
+            # print(scores[1] - scores[0])
             return scores[1] - scores[0]
     else:
         #find out what color is the next player
@@ -636,35 +679,33 @@ def minimax_max(app, board, player, depth, counter):
             nextPlayer = app.player2
         else:
             nextPlayer = app.player1
+        maxScore = -99999
         # recursive calls
-        maxScore = -999999
         for move in moves:
             #play the move and pass the new board and moves into the min function
             newBoard = player.play(move[0], move[1], board)
-            print(f'newBoard: {newBoard}')
-            score = minimax_min(app, newBoard, nextPlayer, depth, counter+1)
+            # print(f'newBoard: {newBoard}')
+            score = minimax_min(app, newBoard, nextPlayer, app.sliderX, counter+1)
+            print(f'maxScore: {score} for position ({move[0]}, {move[1]}) player {player.number}')
             if score > maxScore:
                 maxScore = score
-        print(f'maxScore: {maxScore}')
         return maxScore
 
 def minimax_min(app, board, player, depth, counter):
     # print("starting min")
     # get all possible moves for the particular playernumber (can look to optimize this)
-    movesAndLines = player.getAllPossibleMoves(board)
-    moves = set()
-    for moveAndLine in movesAndLines:
-        for key in moveAndLine:
-            moves.add(key)
-    moves = list(moves)
+    moves = player.getAllPossiblePositions(board)
+    # print(moves)
     # base case
-    if counter >= depth:
+    if counter >= depth or moves == set():
         # compute scores for both black and white
         # return the final score (either black - white or white - black)
         scores = computeMinimax(board)
         if player.number == 1:
+            # print(scores[1] - scores[0])
             return scores[1] - scores[0]
         else:
+            # print(scores[0] - scores[1])
             return scores[0] - scores[1]
     else:
         #find out what color is the next player
@@ -677,12 +718,12 @@ def minimax_min(app, board, player, depth, counter):
         for move in moves:
             #play the move and pass the new board and moves into the min function
             newBoard = player.play(move[0], move[1], board)
-            print(f'newBoard: {newBoard}')
-
+            # print(f'newBoard: {newBoard}')
             score = minimax_max(app, newBoard, nextPlayer, depth, counter+1)
+            # print(score)
+            print(f'minScore: {score} for position ({move[0]}, {move[1]}) player {player.number}')
             if score < minScore:
                 minScore = score
-        print(f'minScore: {minScore}')
         return minScore
 
 def minimaxAI(app, player):
@@ -690,13 +731,8 @@ def minimaxAI(app, player):
     # declare newboard
     board = copy.deepcopy(app.board)
     # get all moves of player (which is basically which player is the AI)
-    movesAndLines = player.getAllPossibleMoves(app.board)
-    moves = set()
-    for moveAndLine in movesAndLines:
-        for key in moveAndLine:
-            moves.add(key)
-    moves = list(moves)
-    
+    moves = player.getAllPossiblePositions(app.board)
+
     # find out who is the next player
     if player.number == 1:
         nextPlayer = app.player2
@@ -708,20 +744,51 @@ def minimaxAI(app, player):
     for move in moves:
         newBoard = player.play(move[0], move[1], board)
         #specify depth here
-        score = minimax_max(app, newBoard, nextPlayer, 0, 0)
+        score = minimax_min(app, newBoard, nextPlayer, 10, 0)
+        print(f'score: {score} for player {player.number}')
+
         if score > maxScore:
             maxScore = score
             bestMove = move
+            
+    check = True
+    #check if the whole board has been filled up, if yes end game
+    for i in range(len(app.board)):
+        for j in range(len(app.board[0])):
+            if app.board[i][j] == 0:
+                check = False
+    app.gameOver = check
     
+    print(f'bestScore" {maxScore}')
     print(f'bestMove: {bestMove}')
     #play best move
     player.play(bestMove[0], bestMove[1], app.board)
     
+    #check for end game after placing a piece
+    check = True
+    #check if the whole board has been filled up, if yes end game
+    for i in range(len(app.board)):
+        for j in range(len(app.board[0])):
+            if app.board[i][j] == 0:
+                check = False
+    app.gameOver = check
+    
+    #check for the number of moves the opponent has
+    #if zero moves, don't switch turns
     #change turn
     if player.number == 1:
-        app.turn = app.player2
+        #check for number of moves
+        moves = app.player2.getAllPossiblePositions(app.board)
+        if len(moves) == 0:
+            app.turn = app.player1
+        else:
+            app.turn = app.player2
     else:
-        app.turn = app.player1
+        moves = app.player1.getAllPossiblePositions(app.board)
+        if len(moves) == 0:
+            app.turn = app.player2
+        else:
+            app.turn = app.player1
         
 # RUN AI
 def runAI(app):
