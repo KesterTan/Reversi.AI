@@ -1,2 +1,4 @@
-Reversi/__pycache__
+Reversi/__pycache__/
 Reversi/cmu_112_graphics.py
+.gitignore
+__pycache__/
