@@ -8,6 +8,22 @@ import random
 import math
 from gui import *
 
+# Bad moves set (near corners that will allow for others to steal corners)
+badMoves = {
+    (0,1), (1,0), (1,1),
+    (0,6), (1,6), (1,7),
+    (6,7), (6,6), (7,6),
+    (6,1), (7,1), (6,0)
+}
+# Good Moves set (all the corners and sides except those adjacent to corners)
+goodMoves = {
+    (0,0), (0,7), (7,7), (7,0),
+    (2,0), (3,0), (4,0), (5,0),
+    (0,2), (0,3), (0,4), (0,5),
+    (2,7), (3,7), (4,7), (5,7),
+    (7,2), (7,3), (7,4), (7,5)
+}
+
 # Creating class for every node of the trr
 class Node:
     def __init__(self, move = None, parent = None, board = None, turn = None):
@@ -107,13 +123,24 @@ def mcts(app, rootTurn, simulations):
         # SIMULATION
         # rollout of the tree, make all moves from that node
         # while the node is not a terminal node
+        # noticed that the AI selects randomly -> include some psuedo random selection to prevent this
         while True:
             # print("MC simulating")
-            possibleMoves = list(turn.getAllPossiblePositions(board))
+            possibleMovesSet = turn.getAllPossiblePositions(board)
+            possibleMoves = list(possibleMovesSet)
             # if possible moves still exists, means game is not over, then continue
             if possibleMoves:
-                randomMove = random.choice(possibleMoves)
                 # print(f"MC simulating move {randomMove}")
+                # prioritise good moves
+                for goodMove in goodMoves:
+                    if goodMove in possibleMovesSet:
+                        board = turn.play(goodMove[0], goodMove[1], board)
+                        continue
+                # if not choose a random move
+                randomMove = random.choice(possibleMoves)
+                # if random move is bad, choose again
+                if randomMove in badMoves:
+                    randomMove = random.choice(possibleMoves)
                 board = turn.play(randomMove[0], randomMove[1], board)
                 # after playing a move switch turns
                 if turn.number == 1:

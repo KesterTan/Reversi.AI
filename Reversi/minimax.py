@@ -61,6 +61,7 @@ def minimax_max(app, board, player, depth, counter):
         return maxScore
 
 def minimax_min(app, board, player, depth, counter):
+    print(f"depth: {depth}")
     # print("starting min")
     # get all possible moves for the particular playernumber (can look to optimize this)
     moves = player.getAllPossiblePositions(board)
@@ -113,7 +114,7 @@ def minimaxAI(app, player):
     for move in moves:
         newBoard = player.play(move[0], move[1], board)
         #specify depth here
-        score = minimax_min(app, newBoard, nextPlayer, 10, 0)
+        score = minimax_min(app, newBoard, nextPlayer, app.sliderX + 20, 0)
         print(f'score: {score} for player {player.number}')
 
         if score > maxScore:

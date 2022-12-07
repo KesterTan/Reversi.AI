@@ -128,14 +128,14 @@ def drawSelectDifficulty(app, canvas):
     # monte carlo play words
     canvas.create_text(app.margin + 4.125 * app.cellSize,
                        app.margin + 7.75 * app.cellSize,
-                       text="Play",
+                       text="Versus MiniMax AI",
                        fill="grey8",
                        font="Helvetica 30")
 
     #play text
     canvas.create_text(app.margin +  4.125 * app.cellSize,
                        app.margin + 9.5 * app.cellSize,
-                       text="Extra Hard Mode",
+                       text="Versus Monte Carlo AI",
                        fill='grey8',
                        font='Helvetica 30')
 
@@ -452,7 +452,7 @@ def mouseDragged(app, event):
     if app.drawSlider == True and check == True:
         app.drawSliderCircle = (x, app.margin + 6.25*app.cellSize)
         app.sliderX = int(((x - (app.margin + 0.5*app.cellSize))
-                           // app.cellSize) + 2)
+                           // app.cellSize))
     
 def mousePressed(app, event):
     x, y = event.x, event.y
@@ -607,8 +607,8 @@ def runAI(app):
         print("starting MC")
         if app.turn.number == 2:
             # specify number simulations here
-            mctsMain(app, app.player2, 100)
-        
+            mctsMain(app, app.player2, app.sliderX * 20)
+
 def runReversi():
     runApp(width=800, height=900)
     
