@@ -1,7 +1,10 @@
 from gui import *
-# MINIMAX AI
+# MINIMAX AI CITATION: I got the rough idea of minimax from this Youtube video: https://youtu.be/l-hh51ncgDI
+# CITATION: I also took reference from this minimax algorithm written for Tic Tac Toe:
+# https://www.geeksforgeeks.org/minimax-algorithm-in-game-theory-set-3-tic-tac-toe-ai-finding-optimal-move/
+
 def computeMinimax(board):
-    # created weighted heuristic board
+    # created weighted heuristic board based off my own experience playing reversi
     weightedBoard = [
         [30,  -20, 10, 10, 10, 10,   -20, 30],
         [-20, -15,-10, -5, -5, -5, -10, -20],

@@ -2,6 +2,7 @@ from cmu_112_graphics import *
 from main import *
 from randomAI import *
 from minimax import *
+from monteCarlo import *
    
 # APP CODE
 def appStarted(app):
@@ -42,6 +43,7 @@ def appStarted(app):
     app.drawSliderCircle = (-99, -99)
     app.drawSliderCircleBool = False
     app.sliderX = 0
+    app.MC = False
     
     #home icon
     app.imagehome = app.loadImage('home.png')
@@ -109,18 +111,41 @@ def drawSelectDifficulty(app, canvas):
         
     #play button
     canvas.create_rectangle(app.margin + 1.25 * app.cellSize,
-                            app.margin + 8 * app.cellSize,
+                            app.margin + 8.75 * app.cellSize,
                             app.margin + 7 * app.cellSize,
-                            app.margin + 9.5 * app.cellSize,
+                            app.margin + 10.25 * app.cellSize,
                             fill="NavajoWhite1",
                             width=0)
-    
+
+    # monte carlo difficulty button
+    canvas.create_rectangle(app.margin + 1.25 * app.cellSize,
+                            app.margin + 7 * app.cellSize,
+                            app.margin + 7 * app.cellSize,
+                            app.margin + 8.5 * app.cellSize,
+                            fill="NavajoWhite1",
+                            width=0)
     #play text
     canvas.create_text(app.margin +  4.125 * app.cellSize,
-                       app.margin + 8.75 * app.cellSize,
+                       app.margin + 9.5 * app.cellSize,
                        text="Play",
                        fill='grey8',
                        font='Helvetica 30')
+
+    # select difficulty words
+    canvas.create_text(app.margin + 4.5*app.cellSize,
+                       app.margin + 5.5*app.cellSize,
+                       text='Slide to select difficulty',
+                       font='Helvetica 20')
+
+    canvas.create_text(app.margin + 0.5 * app.cellSize,
+                       app.margin + 5.5 * app.cellSize,
+                       text='Easy',
+                       font='Helvetica 20')
+
+    canvas.create_text(app.margin + 8 * app.cellSize,
+                       app.margin + 5.5 * app.cellSize,
+                       text='Hard',
+                       font='Helvetica 20')
     #draw the slider
     canvas.create_rectangle(app.margin + 0.5*app.cellSize,
                             app.margin + 6*app.cellSize,
@@ -440,9 +465,17 @@ def mousePressed(app, event):
     if app.selectDifficulty == True:
         if (x >= app.margin + 1.25 * app.cellSize and
             x <= app.margin + 7 * app.cellSize and
-            y >= app.margin + 8 * app.cellSize and
-            y <= app.margin + 9.5 * app.cellSize):
+            y >= app.margin + 8.75 * app.cellSize and
+            y <= app.margin + 10.25 * app.cellSize):
                 app.AI = True
+                app.gamePlay = True
+                app.selectDifficulty = False
+
+        if (x >= app.margin + 1.25 * app.cellSize and
+            x <= app.margin + 7 * app.cellSize and
+            y >= app.margin + 7 * app.cellSize and
+            y <= app.margin + 8.5 * app.cellSize):
+                app.MC = True
                 app.gamePlay = True
                 app.selectDifficulty = False
     
@@ -518,7 +551,7 @@ def mousePressed(app, event):
         runAI(app)
 
     else:
-        if (x >= app.margin + app.cellSize*3 and 
+        if (x >= app.margin + app.cellSize*3 and
             y >= app.margin + app.cellSize*5 and
             x <= app.margin + app.cellSize*5 and
             y <= app.margin + app.cellSize*5.5):
@@ -556,11 +589,16 @@ def isValid(app, x, y):
 
 # RUN AI
 def runAI(app):
-    if app.AI == True:
-        print("AI started")
+    if app.AI:
+        print("minimax AI started")
         # randomAI(app, 2)
         if app.turn.number == 2:
             minimaxAI(app, app.player2)
+    if app.MC:
+        print("starting MC")
+        if app.turn.number == 2:
+            # specify number simulations here
+            mctsMain(app, app.player2, 10000)
         
 def runReversi():
     runApp(width=800, height=900)
