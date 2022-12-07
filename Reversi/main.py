@@ -95,7 +95,7 @@ class player(object):
         for x, y in positions:
             lines = self.getPossibleLines(x, y)
             # print(lines)
-            if lines != []:
+            if lines:
                 self.moves += lines
         # print(board)
         # print(f'User has these possible moves: {self.moves}')
@@ -139,4 +139,3 @@ class player(object):
         
         # return the new board
         return self.board
- 

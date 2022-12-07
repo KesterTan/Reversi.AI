@@ -2,6 +2,7 @@ from cmu_112_graphics import *
 from main import *
 from randomAI import *
 from minimax import *
+from monteCarlo import *
    
 # APP CODE
 def appStarted(app):
@@ -42,6 +43,7 @@ def appStarted(app):
     app.drawSliderCircle = (-99, -99)
     app.drawSliderCircleBool = False
     app.sliderX = 0
+    app.MC = False
     
     #home icon
     app.imagehome = app.loadImage('home.png')
@@ -109,18 +111,49 @@ def drawSelectDifficulty(app, canvas):
         
     #play button
     canvas.create_rectangle(app.margin + 1.25 * app.cellSize,
-                            app.margin + 8 * app.cellSize,
+                            app.margin + 8.75 * app.cellSize,
                             app.margin + 7 * app.cellSize,
-                            app.margin + 9.5 * app.cellSize,
+                            app.margin + 10.25 * app.cellSize,
                             fill="NavajoWhite1",
                             width=0)
-    
+
+    # monte carlo difficulty button
+    canvas.create_rectangle(app.margin + 1.25 * app.cellSize,
+                            app.margin + 7 * app.cellSize,
+                            app.margin + 7 * app.cellSize,
+                            app.margin + 8.5 * app.cellSize,
+                            fill="NavajoWhite1",
+                            width=0)
+
+    # monte carlo play words
+    canvas.create_text(app.margin + 4.125 * app.cellSize,
+                       app.margin + 7.75 * app.cellSize,
+                       text="Play",
+                       fill="grey8",
+                       font="Helvetica 30")
+
     #play text
     canvas.create_text(app.margin +  4.125 * app.cellSize,
-                       app.margin + 8.75 * app.cellSize,
-                       text="Play",
+                       app.margin + 9.5 * app.cellSize,
+                       text="Extra Hard Mode",
                        fill='grey8',
                        font='Helvetica 30')
+
+    # select difficulty words
+    canvas.create_text(app.margin + 4.5*app.cellSize,
+                       app.margin + 5.5*app.cellSize,
+                       text='Slide to select difficulty',
+                       font='Helvetica 20')
+
+    canvas.create_text(app.margin + 0.5 * app.cellSize,
+                       app.margin + 5.5 * app.cellSize,
+                       text='Easy',
+                       font='Helvetica 20')
+
+    canvas.create_text(app.margin + 8 * app.cellSize,
+                       app.margin + 5.5 * app.cellSize,
+                       text='Hard',
+                       font='Helvetica 20')
     #draw the slider
     canvas.create_rectangle(app.margin + 0.5*app.cellSize,
                             app.margin + 6*app.cellSize,
@@ -170,7 +203,7 @@ def drawHomePage(app, canvas):
     
 def drawGameplay(app, canvas):
     #draw confirm message if home button pressed
-    if app.confirmReturn == True:
+    if app.confirmReturn:
         drawConfirmMessage(app, canvas)
     
     #background
@@ -187,7 +220,7 @@ def drawGameplay(app, canvas):
     
     drawScore(app,canvas)
     
-    if app.gameOver == True:
+    if app.gameOver:
         drawGameOver(app, canvas)
         
     #draw home button
@@ -356,12 +389,12 @@ def drawCell(app, canvas, row_num, col_num, color):
 def drawAllPotentialPieces(app, canvas):
     # print("drawing positions")
     app.turn.getAllPossiblePositions(app.board)
-    # print(f'possible Moves: {app.turn.possibleMoves}')
+    # print(f 'possible Moves: {app.turn.possibleMoves}')
     for position in app.turn.possibleMoves:
         drawPotentialPiece(app, canvas, position[0], position[1], 'grey70')
 
 def drawPotentialPiece(app, canvas, row_num, col_num, color):
-    # print(f'row and col: {row_num}, {col_num}')
+    # print(f 'row and col: {row_num}, {col_num}')
     canvas.create_oval(app.margin + col_num*app.cellSize + app.cellSize //2.5,
                        app.margin + row_num*app.cellSize + app.cellSize//2.5,
                        app.margin + (col_num+1)*app.cellSize - app.cellSize//2.5,
@@ -395,7 +428,7 @@ def drawSlider(app, canvas):
                        fill="black",
                        width=0)
     
-    if app.drawSliderCircleBool == False:
+    if not app.drawSliderCircleBool:
         canvas.create_oval(app.margin,
                            app.margin + 6.25*app.cellSize - app.cellSize//2,
                            app.margin + 0.5*app.cellSize + app.cellSize//2,
@@ -440,11 +473,20 @@ def mousePressed(app, event):
     if app.selectDifficulty == True:
         if (x >= app.margin + 1.25 * app.cellSize and
             x <= app.margin + 7 * app.cellSize and
-            y >= app.margin + 8 * app.cellSize and
-            y <= app.margin + 9.5 * app.cellSize):
-                app.AI = True
-                app.gamePlay = True
-                app.selectDifficulty = False
+            y >= app.margin + 8.75 * app.cellSize and
+            y <= app.margin + 10.25 * app.cellSize):
+            app.MC = True
+            app.gamePlay = True
+            app.selectDifficulty = False
+
+
+        if (x >= app.margin + 1.25 * app.cellSize and
+            x <= app.margin + 7 * app.cellSize and
+            y >= app.margin + 7 * app.cellSize and
+            y <= app.margin + 8.5 * app.cellSize):
+            app.AI = True
+            app.gamePlay = True
+            app.selectDifficulty = False
     
     
     if app.gameOver == False and app.home == False:
@@ -489,7 +531,7 @@ def mousePressed(app, event):
         if isValid(app, x, y):
             # if legal: change the board pieces to your colour
             app.board = app.turn.play(col_num, row_num, app.board)
-            # print(f'playing move {col_num}, {row_num}')
+            # print(f 'playing move {col_num}, {row_num}')
             
             # updates score for both
             app.player1.pieces = app.player1.getNumberOfPieces(app.board)
@@ -511,14 +553,14 @@ def mousePressed(app, event):
                 opponent = app.player2
             elif turn == 2:
                 opponent = app.player1
-            # if opponnent has no moves: dont change player turn
+            # if opponent has no moves: dont change player turn
             # if opponent has moves: change player turn
             if len(opponent.getAllPossibleMoves(app.board)) != 0:
                 app.turn = opponent
         runAI(app)
 
     else:
-        if (x >= app.margin + app.cellSize*3 and 
+        if (x >= app.margin + app.cellSize*3 and
             y >= app.margin + app.cellSize*5 and
             x <= app.margin + app.cellSize*5 and
             y <= app.margin + app.cellSize*5.5):
@@ -556,11 +598,16 @@ def isValid(app, x, y):
 
 # RUN AI
 def runAI(app):
-    if app.AI == True:
-        print("AI started")
+    if app.AI:
+        print("minimax AI started")
         # randomAI(app, 2)
         if app.turn.number == 2:
             minimaxAI(app, app.player2)
+    if app.MC:
+        print("starting MC")
+        if app.turn.number == 2:
+            # specify number simulations here
+            mctsMain(app, app.player2, 10000)
         
 def runReversi():
     runApp(width=800, height=900)
