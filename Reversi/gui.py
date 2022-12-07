@@ -607,7 +607,7 @@ def runAI(app):
         print("starting MC")
         if app.turn.number == 2:
             # specify number simulations here
-            mctsMain(app, app.player2, 10000)
+            mctsMain(app, app.player2, 100)
         
 def runReversi():
     runApp(width=800, height=900)

@@ -1,8 +1,11 @@
-# Citation: Got the idea of MCTS from this video: https://www.youtube.com/watch?v=Fbs4lnGLS8M&ab_channel=FullstackAcademy
+# MONTE CARLO SEARCH CITATION: Got the idea of MCTS from this video: https://www.youtube.com/watch?v=Fbs4lnGLS8M&ab_channel=FullstackAcademy
+# MONTE CARLO CITATION: TOOK REFERENCE FROM THIS WEBSITE: https://ai-boson.github.io/mcts/
+# UCT CITATION: TOOK UCT FROM THIS WEBSITE: https://royhung.com/reversi
+# MONTE CARLO CITATION: https://en.wikipedia.org/wiki/Monte_Carlo_tree_search
+
 import copy
 import random
 import math
-import time
 from gui import *
 
 # Creating class for every node of the trr
@@ -25,12 +28,8 @@ class Node:
         # move has already been tried
         self.untriedMoves.remove(move)
         self.children.append(child)
+        print("adding child")
         return child
-
-    # update the results of the node
-    def results(self, result):
-        self.visits += 1
-        self.wins += result
 
     # select the best child for a child using UCT
     def uct(self, originalTurn):
@@ -40,13 +39,13 @@ class Node:
         # if it is the same color as starting piece
         if originalTurn == self.turn:
             for child in self.children:
-                val = child.wins/child.visits + math.sqrt(2*math.log1p(self.visits)/child.visits)
+                val = child.wins/child.visits + math.sqrt(math.log1p(self.visits)/child.visits)
                 if val > largestValue:
                     largestValue = val
                     largest = child
         else:
             for child in self.children:
-                val = 1 - (child.wins/child.visits + math.sqrt(2*math.log1p(self.visits)/child.visits))
+                val = 1 - (child.wins/child.visits + math.sqrt(math.log1p(self.visits)/child.visits))
                 if val > largestValue:
                     largestValue = val
                     largest = child
@@ -67,16 +66,17 @@ def mcts(app, rootTurn, simulations):
 
     # repeat for the number of simulations
     for i in range(simulations):
-        print(f"number of simulations: {i}")
+        # print(f"number of simulations: {i}")
         node = rootNode
         board = copy.deepcopy(app.board)
+
         # SELECT move to play
         # check if all moves has already been tried, if yes select one using uct and actually play it
         while node.untriedMoves == [] and node.children != []:
-            selectedNode = node.uct(turn)
-            # print(f "MC's turn, MC playing move {selectedNode.move}")
+            node = node.uct(turn)
+            # print(f"MC's turn, MC playing move {node.move}")
             if app.turn.number == 2:
-                board = rootTurn.play(selectedNode.move[0], selectedNode.move[1], board)
+                board = turn.play(node.move[0], node.move[1], board)
             # change turn
             if turn.number == 1:
                 # check for number of moves
@@ -91,7 +91,7 @@ def mcts(app, rootTurn, simulations):
                     turn = app.player2
                 else:
                     turn = app.player1
-            return selectedNode
+
         # EXPAND
         # expansion of the tree nodes, add new node to the starting node
         # if there are still untried moves, try a random move in the untried moves
@@ -103,6 +103,7 @@ def mcts(app, rootTurn, simulations):
             board = turn.play(randomMove[0], randomMove[1], board)
             # add the random move as one of the children and move to that node
             node = node.addChildNode(move=randomMove, board=board, turn=turn)
+
         # SIMULATION
         # rollout of the tree, make all moves from that node
         # while the node is not a terminal node
@@ -131,16 +132,29 @@ def mcts(app, rootTurn, simulations):
                 # don't go to the else statement
                 continue
             # if there are no more possible moves, means game has ended, then check what is the result
-            if rootTurn.number == 1:
-                if app.player1.pieces > app.player2.pieces:
-                    # player 1 won
-                    backPropagate(node, True)
-                backPropagate(node, False)
             else:
-                if app.player2.pieces > app.player1.pieces:
-                    backPropagate(node, True)
-                backPropagate(node, False)
-            break
+                if rootTurn.number == 1:
+                    if app.player1.pieces > app.player2.pieces:
+                        # player 1 won
+                        backPropagate(node, True)
+                    backPropagate(node, False)
+                    board = copy.deepcopy(app.board)
+                    break
+                else:
+                    if app.player2.pieces > app.player1.pieces:
+                        backPropagate(node, True)
+                    backPropagate(node, False)
+                    board = copy.deepcopy(app.board)
+                    break
+
+    # return the child node with the highest wins because it means that it is the best
+    highestWins = -999
+    bestNode = rootNode
+    for childNode in rootNode.children:
+        if childNode.wins > highestWins:
+            highestWins = childNode.wins
+            bestNode = childNode
+    return bestNode
 
 def mctsMain(app, rootTurn, simulations):
     selectedNode = mcts(app, rootTurn, simulations)
