@@ -124,10 +124,18 @@ def drawSelectDifficulty(app, canvas):
                             app.margin + 8.5 * app.cellSize,
                             fill="NavajoWhite1",
                             width=0)
+
+    # monte carlo play words
+    canvas.create_text(app.margin + 4.125 * app.cellSize,
+                       app.margin + 7.75 * app.cellSize,
+                       text="Play",
+                       fill="grey8",
+                       font="Helvetica 30")
+
     #play text
     canvas.create_text(app.margin +  4.125 * app.cellSize,
                        app.margin + 9.5 * app.cellSize,
-                       text="Play",
+                       text="Extra Hard Mode",
                        fill='grey8',
                        font='Helvetica 30')
 
@@ -195,7 +203,7 @@ def drawHomePage(app, canvas):
     
 def drawGameplay(app, canvas):
     #draw confirm message if home button pressed
-    if app.confirmReturn == True:
+    if app.confirmReturn:
         drawConfirmMessage(app, canvas)
     
     #background
@@ -212,7 +220,7 @@ def drawGameplay(app, canvas):
     
     drawScore(app,canvas)
     
-    if app.gameOver == True:
+    if app.gameOver:
         drawGameOver(app, canvas)
         
     #draw home button
@@ -381,12 +389,12 @@ def drawCell(app, canvas, row_num, col_num, color):
 def drawAllPotentialPieces(app, canvas):
     # print("drawing positions")
     app.turn.getAllPossiblePositions(app.board)
-    # print(f'possible Moves: {app.turn.possibleMoves}')
+    # print(f 'possible Moves: {app.turn.possibleMoves}')
     for position in app.turn.possibleMoves:
         drawPotentialPiece(app, canvas, position[0], position[1], 'grey70')
 
 def drawPotentialPiece(app, canvas, row_num, col_num, color):
-    # print(f'row and col: {row_num}, {col_num}')
+    # print(f 'row and col: {row_num}, {col_num}')
     canvas.create_oval(app.margin + col_num*app.cellSize + app.cellSize //2.5,
                        app.margin + row_num*app.cellSize + app.cellSize//2.5,
                        app.margin + (col_num+1)*app.cellSize - app.cellSize//2.5,
@@ -420,7 +428,7 @@ def drawSlider(app, canvas):
                        fill="black",
                        width=0)
     
-    if app.drawSliderCircleBool == False:
+    if not app.drawSliderCircleBool:
         canvas.create_oval(app.margin,
                            app.margin + 6.25*app.cellSize - app.cellSize//2,
                            app.margin + 0.5*app.cellSize + app.cellSize//2,
@@ -467,17 +475,18 @@ def mousePressed(app, event):
             x <= app.margin + 7 * app.cellSize and
             y >= app.margin + 8.75 * app.cellSize and
             y <= app.margin + 10.25 * app.cellSize):
-                app.AI = True
-                app.gamePlay = True
-                app.selectDifficulty = False
+            app.MC = True
+            app.gamePlay = True
+            app.selectDifficulty = False
+
 
         if (x >= app.margin + 1.25 * app.cellSize and
             x <= app.margin + 7 * app.cellSize and
             y >= app.margin + 7 * app.cellSize and
             y <= app.margin + 8.5 * app.cellSize):
-                app.MC = True
-                app.gamePlay = True
-                app.selectDifficulty = False
+            app.AI = True
+            app.gamePlay = True
+            app.selectDifficulty = False
     
     
     if app.gameOver == False and app.home == False:
@@ -522,7 +531,7 @@ def mousePressed(app, event):
         if isValid(app, x, y):
             # if legal: change the board pieces to your colour
             app.board = app.turn.play(col_num, row_num, app.board)
-            # print(f'playing move {col_num}, {row_num}')
+            # print(f 'playing move {col_num}, {row_num}')
             
             # updates score for both
             app.player1.pieces = app.player1.getNumberOfPieces(app.board)
@@ -544,7 +553,7 @@ def mousePressed(app, event):
                 opponent = app.player2
             elif turn == 2:
                 opponent = app.player1
-            # if opponnent has no moves: dont change player turn
+            # if opponent has no moves: dont change player turn
             # if opponent has moves: change player turn
             if len(opponent.getAllPossibleMoves(app.board)) != 0:
                 app.turn = opponent

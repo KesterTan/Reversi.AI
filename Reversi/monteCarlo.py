@@ -74,7 +74,7 @@ def mcts(app, rootTurn, simulations):
         # check if all moves has already been tried, if yes select one using uct and actually play it
         while node.untriedMoves == [] and node.children != []:
             selectedNode = node.uct(turn)
-            # print(f" MC's turn, MC playing move {selectedNode.move}")
+            # print(f "MC's turn, MC playing move {selectedNode.move}")
             if app.turn.number == 2:
                 board = rootTurn.play(selectedNode.move[0], selectedNode.move[1], board)
             # change turn
