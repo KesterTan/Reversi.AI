@@ -90,7 +90,6 @@ def mcts(app, rootTurn, simulations):
         # check if all moves has already been tried, if yes select one using uct and actually play it
         while node.untriedMoves == [] and node.children != []:
             node = node.uct(turn)
-            # print(f"MC's turn, MC playing move {node.move}")
             if app.turn.number == 2:
                 board = turn.play(node.move[0], node.move[1], board)
             # change turn
@@ -112,11 +111,11 @@ def mcts(app, rootTurn, simulations):
         # expansion of the tree nodes, add new node to the starting node
         # if there are still untried moves, try a random move in the untried moves
         while node.untriedMoves:
-            # print("expanding tree")
             randomMove = random.choice(node.untriedMoves)
+
             # play the move
-            # print(f"MC expanding node: {randomMove}")
             board = turn.play(randomMove[0], randomMove[1], board)
+
             # add the random move as one of the children and move to that node
             node = node.addChildNode(move=randomMove, board=board, turn=turn)
 
@@ -125,12 +124,10 @@ def mcts(app, rootTurn, simulations):
         # while the node is not a terminal node
         # noticed that the AI selects randomly -> include some psuedo random selection to prevent this
         while True:
-            # print("MC simulating")
             possibleMovesSet = turn.getAllPossiblePositions(board)
             possibleMoves = list(possibleMovesSet)
             # if possible moves still exists, means game is not over, then continue
             if possibleMoves:
-                # print(f"MC simulating move {randomMove}")
                 # prioritise good moves
                 for goodMove in goodMoves:
                     if goodMove in possibleMovesSet:
@@ -186,14 +183,17 @@ def mcts(app, rootTurn, simulations):
 def mctsMain(app, rootTurn, simulations):
     selectedNode = mcts(app, rootTurn, simulations)
     app.board = rootTurn.play(selectedNode.move[0], selectedNode.move[1], app.board)
+
     # check for end game after placing a piece
     check = True
+
     # check if the whole board has been filled up, if yes end game
     for i in range(len(app.board)):
         for j in range(len(app.board[0])):
             if app.board[i][j] == 0:
                 check = False
     app.gameOver = check
+
     # switch turns
     if rootTurn.number == 1:
         #check for number of moves
