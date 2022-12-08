@@ -3,13 +3,12 @@ import random
 
 # RANDOM AI
 def randomAI(app, playerNumber):
-    # check if its the player's turn
+    # check if it's the player's turn
     if app.turn.number == playerNumber:
         # save positions of all possible moves
         movesAndLines = app.turn.getAllPossibleMoves(app.board)
         moves = set()
         for moveAndLine in movesAndLines:
-            # print(moveAndLine)
             for key in moveAndLine:
                 moves.add(key)
         # play a random allowed move

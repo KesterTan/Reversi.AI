@@ -1,3 +1,5 @@
+from network import Network
+from gui import *
 
 class player(object):
     def __init__(self, number, board, rows, cols):
@@ -13,7 +15,11 @@ class player(object):
         self.moves = []
         # saves all the possible lines (captured pieces in a line) a user can get
         self.lines = []
+        self.network = False
         self.possibleMoves = set()
+
+        # uncomment to play online version
+        # self.net = Network()
     
     # gets number of pieces
     def getNumberOfPieces(self, board):
@@ -22,7 +28,6 @@ class player(object):
             for y in range(self.cols):
                 if self.board[x][y] == self.number:
                     self.pieces += 1
-        # print(f'Player {self.number} has {self.pieces} pieces')
         return self.pieces
     
     # get the position of the pieces
@@ -33,14 +38,12 @@ class player(object):
             for x in range(self.cols):
                 if self.board[y][x] == self.number:
                     self.positions.add((y,x))
-        # print(f'Player {self.number} has these pieces in these {self.positions} positions')
         return self.positions
                     
     # get lists of pieces that are captured: lists are used here cause they need to be ordered
     def getPossibleLines(self, x, y):
         # find uninterrupted lines from every direction from a selected piece that the player has (set of array of tuples of captured pieces)
         lines = []
-        # print(f'testing possible lines for {x, y}')
         possibleDirections = {(0,1), (0, -1), (1, 1), (1, -1), (1, 0), (-1, 1), (-1, -1), (-1, 0)}
         for xMove, yMove in possibleDirections:
             # Values need to be redeclared each time or they will accumulate
@@ -61,7 +64,8 @@ class player(object):
             
             while True:
                 # out of limits
-                if posX < 0 or posY < 0 or posX >= self.cols or posY >= self.rows:
+                if (posX < 0 or posY < 0 or posX >= self.cols
+                        or posY >= self.rows):
                     break
                 # if it is itself
                 elif self.board[posX][posY] == self.number:
@@ -71,8 +75,7 @@ class player(object):
                 elif self.board[posX][posY] == 0:
                     endPoint = (posX, posY)
                     possible = True
-                    if line != []:
-                        # print(f'endpoint: {endPoint}')
+                    if line:
                         res[endPoint] = line
                     break
                 # if it is an enemy piece, continue adding 1, and save the line
@@ -82,23 +85,17 @@ class player(object):
                     posY += yMove
             # only if it is possible to place a piece (there isn't a line of long enemy pieces till the end) and there is a line
             if len(res) != 0 and possible == True:
-                # print(res)
                 lines.append(res)
-        # print(f'Position {x, y} has these lines: {lines}')
         return lines
                                     
     def getAllPossibleMoves(self, board):
         self.board = board
         self.moves = []
         positions = self.getPiecesPosition(board)
-        # print(positions)
         for x, y in positions:
             lines = self.getPossibleLines(x, y)
-            # print(lines)
             if lines:
                 self.moves += lines
-        # print(board)
-        # print(f'User has these possible moves: {self.moves}')
         return self.moves
     
     def getAllPossiblePositions(self, board):
@@ -120,22 +117,50 @@ class player(object):
         self.getAllPossibleMoves(board)
         self.getPiecesPosition(board)
         self.board[x][y] = self.number
+
         # Flip over all the pieces from the line
-        
         movesAndLines = self.moves
         line = []
-        # print(f'movesandlines: {movesAndLines}')
         for moveAndLine in movesAndLines:
-            # print(f'moveAndLine: {moveAndLine}')
             for key in moveAndLine:
-                # print(f'key: {key}')
                 if key == (x, y):
-                    # print(f'move: {moveAndLine[key]}')
                     line += moveAndLine[key]
         
         for (a, b) in line:
-            # print(f'flipping {a}, {b}')
             self.board[a][b] = self.number
         
         # return the new board
         return self.board
+
+    # CITATION: adapted from https://github.com/techwithtim/Network-Game-Tutorial/blob/master/game.py
+    def sendData(self):
+        # send data about all possible moves, all positions, score to the server
+        moves = self.getAllPossiblePositions(self.board)
+        sendBoard = self.board
+        score = self.pieces
+        str_move = ""
+        str_board = ""
+        for move in moves:
+            move = str(move).strip(")")
+            str_move = str_move + move.strip("(") + "-"
+        for line in sendBoard:
+            line = str(line).strip("]")
+            str_board = str_board + line.strip("[") + "-"
+        data = str_move + ":" + str_board + ":" + str(score)
+        reply = self.net.send(data)
+        return reply
+
+    # CITATION: adapted from https://github.com/techwithtim/Network-Game-Tutorial/blob/master/game.py
+    @staticmethod
+    def parseData(data):
+        moves = set()
+        newBoard = []
+        score = 0
+        try:
+            d = data.split(":")
+            moves = d[0]
+            newBoard = d[1]
+            score = int(d[2])
+            return moves, newBoard, score
+        except:
+            return moves, newBoard, score
